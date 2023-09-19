@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a web application that aims to allow users converse with a LLM directly and communicate their issues. The LLM will try to provide appropriate responses that will help the users to reflect on their thoughts and act as a support system. The LLM will also be able to detect potential psychological disorders and recommend human experts.
+This project aims to develop an interactive voice-enabled system that serves as a mental health support platform. Users in need of counseling can engage in real-time conversations with an AI. The AI is designed to offer reflective and supportive responses, aiding users in introspection and emotional well-being. Additionally, the system will be equipped with diagnostic capabilities to flag signs of serious issues and subsequently recommend consultations with qualified human experts.
 
 ## Features
 
