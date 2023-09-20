@@ -2,12 +2,10 @@ import React, { useState, useEffect } from "react";
 import "./SpeechComponent.css";
 
 const SpeechComponent = () => {
-  const [text, setText] = useState("");
-  const [aiResponse, setAiResponse] = useState("");
   const [listening, setListening] = useState(false);
-  const [processing, setProcessing] = useState(false);
-
   const [chatId, setChatId] = useState(null);
+  const [chats, setChats] = useState([]);
+  const [processing, setProcessing] = useState(false);
 
   // Function to fetch chatId from API
   const fetchChatId = () => {
@@ -24,19 +22,21 @@ const SpeechComponent = () => {
       });
   };
 
-  // Initial setup to get or set chatId
+  // Initial setup to get or set chatId and chats
   useEffect(() => {
     const storedChatId = sessionStorage.getItem("chatId");
+    const storedChats = JSON.parse(sessionStorage.getItem("chats")) || [];
+    
     if (storedChatId) {
       setChatId(storedChatId);
     } else {
       fetchChatId();
     }
+
+    setChats(storedChats);
   }, []);
 
-
   const startListening = () => {
-
     if (!chatId) {
       console.error("Chat ID is not available.");
       return;
@@ -47,10 +47,8 @@ const SpeechComponent = () => {
     const recognition = new window.webkitSpeechRecognition();
 
     recognition.onresult = (event) => {
-      const speechToText = event.results[0][0].transcript; //getting text from webkit
-      setText(speechToText);
-
       setProcessing(true);
+      const speechToText = event.results[0][0].transcript;
 
       fetch(`${import.meta.env.VITE_APP_BACKEND_API}/api/chats/${chatId}/converse/`, {
         method: "PUT",
@@ -61,14 +59,16 @@ const SpeechComponent = () => {
       })
         .then((response) => response.json())
         .then((data) => {
-          setAiResponse(data.ai_text);
+          
           const synth = window.speechSynthesis;
           const utterThis = new SpeechSynthesisUtterance(data.ai_text);
           synth.speak(utterThis);
 
+          // Update chat history
+          const newChats = [...chats, { user: speechToText, ai: data.ai_text }];
+          setChats(newChats);
+          sessionStorage.setItem("chats", JSON.stringify(newChats));
           setProcessing(false);
-
-          
         });
     };
 
@@ -81,17 +81,25 @@ const SpeechComponent = () => {
     };
 
     recognition.start();
-
-    
   };
 
   return (
     <div className="speech-component">
+      <div className="chat-history">
+        {chats.map((chat, index) => (
+          <div key={index}>
+            <div>User: {chat.user}</div>
+            <br/>
+            <div>AI: {chat.ai}</div>
+
+            <br/>
+          </div>
+        ))}
+      </div>
       <button onClick={startListening}>
-        {listening ? "Listening..." : processing ? "Processing..." : "Speak"}
+        {listening ? "Listening..." : processing ? "Processing.." : "Speak"}
       </button>
-      {aiResponse.length > 0 ? <p>{aiResponse}</p>: null}
-      
+      {/* <p>{text}</p> */}
     </div>
   );
 };
